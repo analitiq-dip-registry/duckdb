@@ -1,43 +1,90 @@
 {
   "$schema": "https://schemas.analitiq.ai/connector/latest.json",
-  "kind": "api",
-  "display_name": "REPLACE",
-  "description": "REPLACE with a short description",
+  "kind": "database",
+  "connector_id": "duckdb",
+  "display_name": "DuckDB",
+  "description": "Connector for DuckDB, an embedded in-process OLAP database. Connects via the duckdb_engine SQLAlchemy dialect to a local database file or an in-memory database. DuckDB is not a client-server system: there is no host, port, username, password, or TLS handshake; access is governed by local filesystem permissions.",
+  "tags": [
+    "database",
+    "duckdb",
+    "sqlalchemy",
+    "olap",
+    "embedded",
+    "analytics"
+  ],
   "version": "0.0.0",
-  "default_transport": "api",
+  "default_transport": "database",
   "transports": {
-    "api": {
-      "transport_type": "http",
-      "base_url": "https://api.example.com/v1/",
-      "headers": {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": { "template": "Bearer ${secrets.api_key}" }
+    "database": {
+      "transport_type": "sqlalchemy",
+      "driver": "duckdb",
+      "dsn": {
+        "kind": "url_template",
+        "template": "duckdb:///{database_path}",
+        "bindings": {
+          "database_path": {
+            "value": {
+              "ref": "connection.parameters.database_path"
+            },
+            "encoding": "raw"
+          }
+        }
       },
-      "timeout_seconds": 30,
-      "rate_limit": {
-        "max_requests": 60,
-        "time_window_seconds": 60
+      "options": {
+        "pool_size": 1
       }
     }
   },
   "auth": {
-    "type": "api_key"
+    "type": "none"
   },
   "connection_contract": {
     "inputs": {
-      "api_key": {
+      "database_path": {
         "source": "user",
         "phase": "pre_auth",
-        "storage": "secrets",
+        "storage": "connection.parameters",
         "type": "string",
         "required": true,
-        "secret": true,
         "ui": {
-          "label": "API Key",
-          "widget": "password"
+          "label": "Database path",
+          "placeholder": ":memory: or /absolute/path/to/file.duckdb",
+          "widget": "text"
+        }
+      },
+      "read_only": {
+        "source": "user",
+        "phase": "pre_auth",
+        "storage": "connection.parameters",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "ui": {
+          "label": "Read-only",
+          "widget": "checkbox"
         }
       }
+    }
+  },
+  "resource_discovery": {
+    "strategy": "information_schema",
+    "transport_ref": "database",
+    "implementation": {
+      "type": "builtin"
+    },
+    "options": {
+      "exclude_schemas": [
+        "information_schema",
+        "pg_catalog"
+      ]
+    },
+    "produces": [
+      "connection.endpoints",
+      "connection.type_map"
+    ],
+    "triggers": {
+      "list_resources": "on_activation",
+      "describe_resource": "on_resource_selected"
     }
   }
 }

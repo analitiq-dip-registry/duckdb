@@ -1,0 +1,70 @@
+[
+  { "match": "exact", "native": "BOOLEAN",   "canonical": "Boolean" },
+  { "match": "exact", "native": "BOOL",      "canonical": "Boolean" },
+  { "match": "exact", "native": "LOGICAL",   "canonical": "Boolean" },
+
+  { "match": "exact", "native": "TINYINT",   "canonical": "Int8" },
+  { "match": "exact", "native": "INT1",      "canonical": "Int8" },
+  { "match": "exact", "native": "SMALLINT",  "canonical": "Int16" },
+  { "match": "exact", "native": "INT2",      "canonical": "Int16" },
+  { "match": "exact", "native": "SHORT",     "canonical": "Int16" },
+  { "match": "exact", "native": "INTEGER",   "canonical": "Int32" },
+  { "match": "exact", "native": "INT4",      "canonical": "Int32" },
+  { "match": "exact", "native": "INT",       "canonical": "Int32" },
+  { "match": "exact", "native": "SIGNED",    "canonical": "Int32" },
+  { "match": "exact", "native": "BIGINT",    "canonical": "Int64" },
+  { "match": "exact", "native": "INT8",      "canonical": "Int64" },
+  { "match": "exact", "native": "LONG",      "canonical": "Int64" },
+
+  { "match": "exact", "native": "HUGEINT",   "canonical": "Decimal128(38, 0)" },
+
+  { "match": "exact", "native": "UTINYINT",  "canonical": "UInt8" },
+  { "match": "exact", "native": "USMALLINT", "canonical": "UInt16" },
+  { "match": "exact", "native": "UINTEGER",  "canonical": "UInt32" },
+  { "match": "exact", "native": "UBIGINT",   "canonical": "UInt64" },
+  { "match": "exact", "native": "UHUGEINT",  "canonical": "Decimal128(38, 0)" },
+
+  { "match": "exact", "native": "FLOAT",     "canonical": "Float32" },
+  { "match": "exact", "native": "FLOAT4",    "canonical": "Float32" },
+  { "match": "exact", "native": "REAL",      "canonical": "Float32" },
+  { "match": "exact", "native": "DOUBLE",    "canonical": "Float64" },
+  { "match": "exact", "native": "FLOAT8",    "canonical": "Float64" },
+
+  { "match": "regex", "native": "^DECIMAL\\((?<precision>[0-9]+),\\s*(?<scale>[0-9]+)\\)$", "canonical": "Decimal128(${precision}, ${scale})" },
+  { "match": "regex", "native": "^NUMERIC\\((?<precision>[0-9]+),\\s*(?<scale>[0-9]+)\\)$", "canonical": "Decimal128(${precision}, ${scale})" },
+  { "match": "exact", "native": "DECIMAL",   "canonical": "Decimal128(18, 3)" },
+  { "match": "exact", "native": "NUMERIC",   "canonical": "Decimal128(18, 3)" },
+
+  { "match": "regex", "native": "^VARCHAR(\\([0-9]+\\))?$", "canonical": "Utf8" },
+  { "match": "regex", "native": "^CHAR(\\([0-9]+\\))?$",    "canonical": "Utf8" },
+  { "match": "regex", "native": "^BPCHAR(\\([0-9]+\\))?$",  "canonical": "Utf8" },
+  { "match": "exact", "native": "TEXT",      "canonical": "Utf8" },
+  { "match": "exact", "native": "STRING",    "canonical": "Utf8" },
+
+  { "match": "exact", "native": "BLOB",      "canonical": "Binary" },
+  { "match": "exact", "native": "BYTEA",     "canonical": "Binary" },
+  { "match": "exact", "native": "BINARY",    "canonical": "Binary" },
+  { "match": "exact", "native": "VARBINARY", "canonical": "Binary" },
+
+  { "match": "exact", "native": "BIT",       "canonical": "Binary" },
+  { "match": "exact", "native": "BITSTRING", "canonical": "Binary" },
+
+  { "match": "exact", "native": "DATE",      "canonical": "Date32" },
+  { "match": "regex", "native": "^TIME(\\([0-9]+\\))?$",                     "canonical": "Time64(MICROSECOND)" },
+  { "match": "regex", "native": "^TIMESTAMP(\\([0-9]+\\))? WITH TIME ZONE$", "canonical": "Timestamp(MICROSECOND, UTC)" },
+  { "match": "exact", "native": "TIMESTAMPTZ", "canonical": "Timestamp(MICROSECOND, UTC)" },
+  { "match": "regex", "native": "^TIMESTAMP(\\([0-9]+\\))?$",                "canonical": "Timestamp(MICROSECOND)" },
+  { "match": "exact", "native": "DATETIME",  "canonical": "Timestamp(MICROSECOND)" },
+
+  { "match": "exact", "native": "INTERVAL",  "canonical": "Duration(MICROSECOND)" },
+
+  { "match": "exact", "native": "UUID",      "canonical": "Utf8" },
+
+  { "match": "exact", "native": "JSON",      "canonical": "Json" },
+  { "match": "exact", "native": "ARRAY",     "canonical": "Json" },
+  { "match": "exact", "native": "LIST",      "canonical": "Json" },
+  { "match": "exact", "native": "MAP",       "canonical": "Json" },
+  { "match": "exact", "native": "STRUCT",    "canonical": "Json" },
+  { "match": "exact", "native": "UNION",     "canonical": "Json" },
+  { "match": "exact", "native": "ENUM",      "canonical": "Utf8" }
+]
