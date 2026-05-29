@@ -1,5 +1,9 @@
 # DuckDB
 
+[![Status: unverified](https://img.shields.io/badge/status-unverified-orange)](https://github.com/analitiq-dip-registry)
+[![Latest release](https://img.shields.io/github/v/release/analitiq-dip-registry/duckdb)](https://github.com/analitiq-dip-registry/duckdb/releases)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+
 This connector lets the Analitiq platform read from and write to a **DuckDB** database — a fast, embedded, in-process analytical (OLAP) SQL database. It connects to a local DuckDB database file (or an in-memory database) through the `duckdb_engine` SQLAlchemy dialect.
 
 ## What is this?
