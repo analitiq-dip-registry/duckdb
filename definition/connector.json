@@ -86,5 +86,36 @@
       "list_resources": "on_activation",
       "describe_resource": "on_resource_selected"
     }
+  },
+  "sql_capabilities": {
+    "catalog": "none",
+    "session_targeting": "per_statement",
+    "merge_form": "merge",
+    "bulk_load": {},
+    "stage": {
+      "scope": "temp",
+      "schema": "target",
+      "transactional_ddl": true
+    },
+    "limits": {
+      "max_bind_params": 65535
+    }
+  },
+  "write_unit": {
+    "rows": 32768,
+    "bytes": 67108864
+  },
+  "error_map": {
+    "sqlstate": {
+      "08": "unreachable",
+      "22": "write_rejected",
+      "23": "write_rejected"
+    },
+    "exception": {
+      "OperationalError": "unreachable",
+      "InterfaceError": "unreachable",
+      "IntegrityError": "write_rejected",
+      "DataError": "write_rejected"
+    }
   }
 }
