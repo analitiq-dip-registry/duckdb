@@ -16,8 +16,8 @@ DuckDB is an embedded, in-process analytical (OLAP) SQL database. This connector
 - DuckDB has no username, password, or TLS handshake. Access to a database is controlled by the operating system's filesystem permissions on the database file.
 - Connection inputs:
   - `database_path` (required) — local path to the `.duckdb`/`.db` file, or `:memory:` for an ephemeral in-memory database.
-  - `read_only` (optional, default `false`) — open an existing file read-only; required for concurrent multi-process access.
-- DSN form: `duckdb:///{database_path}` (e.g. `duckdb:///:memory:`, `duckdb:///relative/file.db`, `duckdb:////absolute/path/file.db`).
+  - `access_mode` (optional, default `AUTOMATIC`) — `AUTOMATIC` (DuckDB default: opens read-write, falls back to read-only if the file is not writable), `READ_WRITE`, or `READ_ONLY`. `READ_ONLY` applies only to file databases — it is incompatible with `:memory:`.
+- DSN form: `duckdb:///{database_path}?access_mode={access_mode}` (e.g. `duckdb:////absolute/path/file.db?access_mode=AUTOMATIC`, `duckdb:////absolute/path/file.db?access_mode=READ_ONLY`).
 
 ## Post-Auth Steps
 
@@ -33,7 +33,7 @@ Not applicable — DuckDB runs in-process against a local file; there is no netw
 
 ## Caveats
 
-- **Single writer.** A DuckDB file supports one read-write connection at a time; the connector uses `pool_size: 1`. Use `read_only: true` for concurrent multi-process reads.
+- **Single writer.** A DuckDB file supports one read-write connection at a time; the connector uses `pool_size: 1`. Set `access_mode` to `READ_ONLY` for concurrent multi-process reads. `READ_ONLY` is incompatible with `:memory:` databases.
 - **In-memory databases are ephemeral.** `:memory:` data is lost when the connection closes and is not shared across connections.
 - **Absolute vs relative paths.** Absolute paths need four slashes after the scheme (`duckdb:////abs/path`); relative paths use three (`duckdb:///rel/path`). The full path is supplied verbatim in `database_path`.
 - **`config` passthrough not exposed.** DuckDB's `config` dict (e.g. `threads`, `memory_limit`) is not currently a connection input — the connection-contract input types do not represent dictionaries.
