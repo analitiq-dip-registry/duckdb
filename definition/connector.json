@@ -20,13 +20,19 @@
       "driver": "duckdb",
       "dsn": {
         "kind": "url_template",
-        "template": "duckdb:///{database_path}",
+        "template": "duckdb:///{database_path}?access_mode={access_mode}",
         "bindings": {
           "database_path": {
             "value": {
               "ref": "connection.parameters.database_path"
             },
             "encoding": "raw"
+          },
+          "access_mode": {
+            "value": {
+              "ref": "connection.parameters.access_mode"
+            },
+            "encoding": "url_query_value"
           }
         }
       },
@@ -52,16 +58,21 @@
           "widget": "text"
         }
       },
-      "read_only": {
+      "access_mode": {
         "source": "user",
         "phase": "pre_auth",
         "storage": "connection.parameters",
-        "type": "boolean",
+        "type": "string",
         "required": false,
-        "default": false,
+        "default": "READ_WRITE",
+        "enum": ["READ_WRITE", "READ_ONLY"],
         "ui": {
-          "label": "Read-only",
-          "widget": "checkbox"
+          "label": "Access mode",
+          "widget": "select",
+          "options": [
+            {"value": "READ_WRITE", "label": "Read/Write (default)"},
+            {"value": "READ_ONLY", "label": "Read-only"}
+          ]
         }
       }
     }
