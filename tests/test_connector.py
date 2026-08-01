@@ -6,13 +6,14 @@ DuckDB-specific invariants without requiring a live database.
 
 import json
 import pathlib
+import re
 
 import pytest
 
 _DEFINITION_DIR = pathlib.Path(__file__).parent.parent / "definition"
 
 
-def _load(filename: str) -> dict:
+def _load(filename: str) -> dict | list:
     return json.loads((_DEFINITION_DIR / filename).read_text())
 
 
@@ -22,7 +23,7 @@ def connector() -> dict:
 
 
 @pytest.fixture(scope="module")
-def type_map() -> dict:
+def type_map() -> list:
     return _load("type-map.json")
 
 
@@ -31,8 +32,8 @@ def type_map() -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_connector_json_is_valid(connector):
-    """connector.json parses without error."""
+def test_connector_root_is_object(connector):
+    """connector.json root is a JSON object, not an array or scalar."""
     assert isinstance(connector, dict)
 
 
@@ -71,15 +72,19 @@ def test_read_only_is_optional(connector):
     assert inputs["read_only"]["default"] is False
 
 
-def test_dsn_template_contains_database_path(connector):
+def test_dsn_template_exact(connector):
+    """DSN template must be exactly duckdb:///{database_path}.
+
+    Two slashes (duckdb://{database_path}) is the host-based URI form and
+    silently produces malformed DSNs for absolute paths.
+    """
     dsn = connector["transports"]["database"]["dsn"]
     assert dsn["kind"] == "url_template"
-    assert "{database_path}" in dsn["template"]
-    assert dsn["template"].startswith("duckdb:///")
+    assert dsn["template"] == "duckdb:///{database_path}"
 
 
 # ---------------------------------------------------------------------------
-# write_unit — in-process OLAP engine; large batches are cheap.
+# write_unit — in-process OLAP; 32 K rows / 64 MiB targets DuckDB's batch economics.
 # ---------------------------------------------------------------------------
 
 
@@ -87,12 +92,17 @@ def test_write_unit_declared(connector):
     assert "write_unit" in connector, "write_unit must be declared (issue #8)"
 
 
-def test_write_unit_rows(connector):
-    assert connector["write_unit"]["rows"] > 0
+def test_write_unit_exact_values(connector):
+    assert connector["write_unit"]["rows"] == 32768
+    assert connector["write_unit"]["bytes"] == 67108864
 
 
-def test_write_unit_bytes(connector):
-    assert connector["write_unit"]["bytes"] > 0
+def test_write_unit_rows_does_not_exceed_max_bind_params(connector):
+    """write_unit.rows must not exceed max_bind_params or batches overflow at bind time."""
+    assert (
+        connector["write_unit"]["rows"]
+        <= connector["sql_capabilities"]["limits"]["max_bind_params"]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -110,25 +120,32 @@ def test_sql_capabilities_required_shape_facts(connector):
         assert fact in caps, f"sql_capabilities.{fact} is required"
 
 
+def test_sql_capabilities_catalog_and_session_targeting(connector):
+    """DuckDB connects to one file; no catalog prefix. SET applies per-statement."""
+    caps = connector["sql_capabilities"]
+    assert caps["catalog"] == "none"
+    assert caps["session_targeting"] == "per_statement"
+
+
 def test_sql_capabilities_merge_form(connector):
-    # DuckDB supports standard MERGE syntax.
+    # DuckDB supports standard MERGE syntax (available since v1.4.0).
     assert connector["sql_capabilities"]["merge_form"] == "merge"
 
 
-def test_sql_capabilities_stage_transactional_ddl(connector):
-    # DuckDB DDL is transactional — CREATE TABLE is rollback-safe.
-    assert connector["sql_capabilities"]["stage"]["transactional_ddl"] is True
+def test_sql_capabilities_stage(connector):
+    """DuckDB supports TEMP tables and DDL is rollback-safe inside transactions."""
+    stage = connector["sql_capabilities"]["stage"]
+    assert stage["scope"] == "temp"
+    assert stage["schema"] == "target"
+    assert stage["transactional_ddl"] is True
 
 
-def test_max_bind_params_declared(connector):
+def test_max_bind_params_exact(connector):
     limits = connector["sql_capabilities"].get("limits", {})
     assert "max_bind_params" in limits, (
         "sql_capabilities.limits.max_bind_params must be declared (issue #8)"
     )
-
-
-def test_max_bind_params_positive(connector):
-    assert connector["sql_capabilities"]["limits"]["max_bind_params"] > 0
+    assert limits["max_bind_params"] == 65535
 
 
 # ---------------------------------------------------------------------------
@@ -140,24 +157,44 @@ def test_error_map_declared(connector):
     assert "error_map" in connector, "error_map must be declared (issue #8)"
 
 
-def test_error_map_has_exception_or_sqlstate(connector):
+def test_error_map_has_exception_and_sqlstate(connector):
     error_map = connector["error_map"]
-    assert "exception" in error_map or "sqlstate" in error_map
+    assert "exception" in error_map
+    assert "sqlstate" in error_map
 
 
-def test_error_map_exception_values_are_valid_categories(connector):
-    valid = {"transient", "config", "auth", "unreachable", "rate_limited", "write_rejected"}
-    for exc_class, category in connector["error_map"].get("exception", {}).items():
-        assert category in valid, (
-            f"error_map.exception[{exc_class!r}] = {category!r} is not a valid failure category"
+def test_error_map_sqlstate_keys_are_valid_class_codes(connector):
+    """SQLSTATE class codes must be 2-character uppercase-alphanumeric strings."""
+    for code in connector["error_map"].get("sqlstate", {}):
+        assert re.fullmatch(r"[0-9A-Z]{2,5}", code), (
+            f"sqlstate key {code!r} is not a valid SQLSTATE class or code"
         )
 
 
-def test_error_map_sqlstate_values_are_valid_categories(connector):
+def test_error_map_specific_sqlstate_mappings(connector):
+    sqlstate = connector["error_map"]["sqlstate"]
+    assert sqlstate["08"] == "unreachable"
+    assert sqlstate["22"] == "write_rejected"
+    assert sqlstate["23"] == "write_rejected"
+
+
+def test_error_map_specific_exception_mappings(connector):
+    exc = connector["error_map"]["exception"]
+    assert exc["OperationalError"] == "unreachable"
+    assert exc["InterfaceError"] == "unreachable"
+    assert exc["IntegrityError"] == "write_rejected"
+    assert exc["DataError"] == "write_rejected"
+
+
+def test_error_map_all_categories_valid(connector):
     valid = {"transient", "config", "auth", "unreachable", "rate_limited", "write_rejected"}
     for code, category in connector["error_map"].get("sqlstate", {}).items():
         assert category in valid, (
             f"error_map.sqlstate[{code!r}] = {category!r} is not a valid failure category"
+        )
+    for exc_class, category in connector["error_map"].get("exception", {}).items():
+        assert category in valid, (
+            f"error_map.exception[{exc_class!r}] = {category!r} is not a valid failure category"
         )
 
 
@@ -166,7 +203,26 @@ def test_error_map_sqlstate_values_are_valid_categories(connector):
 # ---------------------------------------------------------------------------
 
 
-def test_type_map_is_valid(type_map):
-    """type-map.json parses without error and is non-empty."""
-    assert isinstance(type_map, (dict, list))
-    assert type_map
+def test_type_map_has_entries(type_map):
+    assert len(type_map) > 0, "type-map.json must contain at least one mapping entry"
+
+
+def test_type_map_entry_shape(type_map):
+    for i, entry in enumerate(type_map):
+        assert "match" in entry, f"entry {i} missing 'match'"
+        assert "native" in entry, f"entry {i} missing 'native'"
+        assert "canonical" in entry, f"entry {i} missing 'canonical'"
+        assert entry["match"] in {"exact", "regex"}, (
+            f"entry {i} has invalid match type {entry['match']!r}"
+        )
+
+
+def test_type_map_critical_mappings(type_map):
+    """Verify CLAUDE.md-documented special-case mappings are present and correct."""
+    exact = {e["native"]: e["canonical"] for e in type_map if e["match"] == "exact"}
+    assert exact["HUGEINT"] == "Decimal128(38, 0)"
+    assert exact["UHUGEINT"] == "Decimal128(38, 0)"
+    assert exact["UUID"] == "Utf8"
+    assert exact["INTERVAL"] == "Duration(MICROSECOND)"
+    assert exact["JSON"] == "Json"
+    assert exact["ENUM"] == "Utf8"

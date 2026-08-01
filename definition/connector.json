@@ -102,7 +102,7 @@
     }
   },
   "write_unit": {
-    "rows": 65536,
+    "rows": 32768,
     "bytes": 67108864
   },
   "error_map": {
@@ -113,7 +113,9 @@
     },
     "exception": {
       "OperationalError": "unreachable",
-      "InterfaceError": "unreachable"
+      "InterfaceError": "unreachable",
+      "IntegrityError": "write_rejected",
+      "DataError": "write_rejected"
     }
   }
 }
