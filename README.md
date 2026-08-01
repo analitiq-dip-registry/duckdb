@@ -46,9 +46,9 @@ DuckDB has **no authentication** — no username, password, or TLS. Because Duck
 You only need to provide the database location:
 
 1. **Database path** (required) — the path to your DuckDB file, for example `/data/analytics.duckdb`, a relative path like `warehouse/local.db`, or `:memory:` for an ephemeral in-memory database.
-2. **Access mode** (optional, default Read/Write) — choose **Read-only** to open an existing file without acquiring a write lock. This is required when multiple processes need to read the same file at the same time.
+2. **Access mode** (optional, default Automatic) — controls how DuckDB opens the database file. **Automatic** (default) opens the file read-write if the OS permits it and falls back to read-only otherwise. Choose **Read-only** to explicitly open the file without acquiring a write lock — required when multiple processes read the same file simultaneously. **Read-only** is incompatible with `:memory:` databases.
 
-Internally the connection is built as a SQLAlchemy URL of the form `duckdb:///{database_path}?access_mode=READ_WRITE` (or `READ_ONLY`).
+Internally the connection uses a SQLAlchemy URL of the form `duckdb:///{database_path}?access_mode=AUTOMATIC`, `READ_WRITE`, or `READ_ONLY`, depending on the selected access mode.
 
 ## Available Resources
 
@@ -56,7 +56,7 @@ DuckDB is a database connector, so it does not ship a fixed list of endpoints. I
 
 ## Limitations
 
-- **Single writer** — A DuckDB file supports only one read-write connection at a time. For concurrent access from multiple processes, open the file with **Access mode: Read-only**. The connector uses a single pooled connection.
+- **Single writer** — A DuckDB file supports only one read-write connection at a time. For concurrent access from multiple processes, open the file with **Access mode: Read-only**. The connector uses a single pooled connection. Note: Read-only mode is not compatible with `:memory:` databases.
 - **In-memory databases are ephemeral** — When you use `:memory:`, all data is lost once the connection closes, and it is not shared between connections.
 - **Absolute vs relative paths** — Absolute file paths require four slashes after the scheme (`duckdb:////absolute/path/file.db`); relative paths use three (`duckdb:///relative/file.db`). Provide the full path in the database-path field.
 - **Driver configuration** — Advanced DuckDB `config` options (such as `threads` or `memory_limit`) are not currently exposed as connection settings.
