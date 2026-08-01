@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "analitiq-connector-duckdb"
+version = "0.0.1"
+description = "Analitiq connector for DuckDB: dialect, driver, definition."
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools]
+packages = ["analitiq_connector_duckdb"]
+package-dir = { "analitiq_connector_duckdb" = "." }
+
+[project.entry-points."analitiq.source_connectors"]
+duckdb = "analitiq_connector_duckdb.connector:DuckDBConnector"
+
+[project.entry-points."analitiq.destination_connectors"]
+duckdb = "analitiq_connector_duckdb.connector:DuckDBConnector"

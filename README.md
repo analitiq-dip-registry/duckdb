@@ -46,21 +46,44 @@ DuckDB has **no authentication** — no username, password, or TLS. Because Duck
 You only need to provide the database location:
 
 1. **Database path** (required) — the path to your DuckDB file, for example `/data/analytics.duckdb`, a relative path like `warehouse/local.db`, or `:memory:` for an ephemeral in-memory database.
-2. **Read-only** (optional) — enable this to open an existing file in read-only mode. This is required when multiple processes need to read the same file at the same time. Defaults to off.
+2. **Read-only** (optional, **currently non-functional** — see [Limitations](#limitations)) — a declared checkbox that is not wired into the connection. Leave it off; setting it changes nothing.
 
-Internally the connection is built as a SQLAlchemy URL of the form `duckdb:///{database_path}`.
+Internally the connection is built as a SQLAlchemy URL of the form `duckdb+duckdb_engine:///{database_path}`. The explicit `dialect+driver` form is what the connector declares; `duckdb_engine` publishes only the bare `duckdb` entry point, so `connector.py` registers the `duckdb+duckdb_engine` alias onto the same dialect class at import time.
 
 ## Available Resources
 
 DuckDB is a database connector, so it does not ship a fixed list of endpoints. Instead, the schemas and tables in your database are **discovered automatically at runtime** from `information_schema`. The internal system schemas (`information_schema`, `pg_catalog`) are excluded, so you only see your own data.
 
+## Reading and writing
+
+This connector works in **both directions** — it is registered as a source and as a destination (`analitiq.source_connectors` and `analitiq.destination_connectors` in `pyproject.toml`).
+
+Writes ride the engine's stage-then-apply cycle:
+
+1. A session-scoped stage table is created shaped like the target — `CREATE TEMPORARY TABLE ... AS SELECT * FROM target WHERE 1 = 0`, because DuckDB implements no `CREATE TABLE ... LIKE`.
+2. The batch is landed into the stage **natively as Arrow**: DuckDB runs in-process, so the connector registers the Arrow batch on the connection as a zero-copy relation and does one `INSERT ... SELECT` from it, instead of row-by-row `executemany`.
+3. The stage is applied to the target — a plain `INSERT ... SELECT` for append and truncate-insert, or a PostgreSQL-style `INSERT ... SELECT ... ON CONFLICT (keys) DO UPDATE` upsert — then dropped. Stage DDL is transactional, so the whole cycle commits or rolls back as one unit.
+
+Because the two directions do not need the same table, the type mapping is split into two files:
+
+| File | Direction | Purpose |
+|------|-----------|---------|
+| `definition/type-map-read.json` | Read | Maps DuckDB native types to Analitiq canonical types on discovery and extraction. |
+| `definition/type-map-write.json` | Write | Maps canonical types to the DuckDB `CREATE TABLE` types the destination renders. |
+
+(The single combined `definition/type-map.json` this connector used to ship no longer exists.)
+
 ## Limitations
 
-- **Single writer** — A DuckDB file supports only one read-write connection at a time. For concurrent access from multiple processes, open the file with the **read-only** option. The connector uses a single pooled connection.
+- **The read-only option does not work** — `definition/connector.json` declares a `read_only` input, but it is bound to nothing: the DSN template interpolates only `database_path`, so the value never reaches DuckDB. It also would not work as spelled even if it were appended to the URL — `duckdb_engine` forwards URL query parameters as DuckDB *config keys*, and DuckDB has no `read_only` config key, so `?read_only=true` fails with `Catalog Error: unrecognized configuration parameter "read_only"`. The key that actually opens a database read-only is `access_mode=READ_ONLY`. Until this is rewired, treat the checkbox as inert and do not rely on it for concurrency safety.
+- **Single writer** — A DuckDB file supports only one read-write connection at a time, and the connector uses a single pooled connection (`pool_size: 1`). Because the read-only option is non-functional (above), the connector currently offers no supported way to attach to a file that another process holds open read-write.
 - **In-memory databases are ephemeral** — When you use `:memory:`, all data is lost once the connection closes, and it is not shared between connections.
-- **Absolute vs relative paths** — Absolute file paths require four slashes after the scheme (`duckdb:////absolute/path/file.db`); relative paths use three (`duckdb:///relative/file.db`). Provide the full path in the database-path field.
+- **Absolute vs relative paths** — Absolute file paths require four slashes after the scheme (`duckdb+duckdb_engine:////absolute/path/file.db`); relative paths use three (`duckdb+duckdb_engine:///relative/file.db`). Provide the full path in the database-path field.
 - **Driver configuration** — Advanced DuckDB `config` options (such as `threads` or `memory_limit`) are not currently exposed as connection settings.
+- **Upserts need a real constraint** — DuckDB resolves an `ON CONFLICT` target only against an existing `UNIQUE`/`PRIMARY KEY` constraint or index. Writing in upsert mode into a target table without one fails loudly rather than silently appending duplicates.
 - **Version-dependent types** — DuckDB's available data types depend on the engine version. The connector's type mapping covers the standard general-purpose and nested types; very new or extension-provided types may not be mapped.
+- **Write-path type collapsing** — On the write path (`definition/type-map-write.json`), `LargeUtf8` and `Null` render as `VARCHAR`, `Json`/`Object`/`List` render as `JSON`, and decimals with precision above 38 (DuckDB's maximum) fall back to `VARCHAR` rather than losing digits.
+- **No timezone drift** — Every session is pinned with `SET TimeZone = 'UTC'`, so `TIMESTAMP WITH TIME ZONE` values render as the instant they store regardless of the host's local zone.
 
 ## For AI agents
 

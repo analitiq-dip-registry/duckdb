@@ -3,7 +3,8 @@
   "kind": "database",
   "connector_id": "duckdb",
   "display_name": "DuckDB",
-  "description": "Connector for DuckDB, an embedded in-process OLAP database. Connects via the duckdb_engine SQLAlchemy dialect to a local database file or an in-memory database. DuckDB is not a client-server system: there is no host, port, username, password, or TLS handshake; access is governed by local filesystem permissions.",
+  "description": "DuckDB, an embedded in-process OLAP database. Reads and writes over the synchronous SQLAlchemy duckdb+duckdb_engine transport against a local database file or an in-memory database. DuckDB is not a client-server system: there is no host, port, username, password or TLS handshake, and access is governed by local filesystem permissions - so the connector declares auth type 'none' and no TLS block. Schema/table/view discovery runs against information_schema. The declared SQL write path is stage-then-merge: a session-scoped CREATE TEMPORARY TABLE ... AS SELECT ... WHERE 1 = 0 stage (DuckDB implements no CREATE TABLE ... LIKE), a Postgres-style INSERT ... ON CONFLICT ... DO UPDATE upsert, and transactional DDL, so the whole cycle rolls back as one unit. Batches land through the connector's bulk hook, which registers the Arrow batch on the in-process connection and INSERT ... SELECTs from it - DuckDB's native zero-copy Arrow ingestion - instead of row-by-row executemany.",
+  "documentation_url": "https://duckdb.org/docs/stable/",
   "tags": [
     "database",
     "duckdb",
@@ -17,10 +18,10 @@
   "transports": {
     "database": {
       "transport_type": "sqlalchemy",
-      "driver": "duckdb",
+      "driver": "duckdb+duckdb_engine",
       "dsn": {
         "kind": "url_template",
-        "template": "duckdb:///{database_path}",
+        "template": "duckdb+duckdb_engine:///{database_path}",
         "bindings": {
           "database_path": {
             "value": {
@@ -64,6 +65,25 @@
           "widget": "checkbox"
         }
       }
+    },
+    "required_for_activation": [
+      "connection.parameters.database_path"
+    ]
+  },
+  "sql_capabilities": {
+    "catalog": "none",
+    "session_targeting": "per_statement",
+    "merge_form": "insert_on_conflict",
+    "bulk_load": {
+      "sqlalchemy": "copy_from"
+    },
+    "stage": {
+      "scope": "temp",
+      "schema": "target",
+      "transactional_ddl": true
+    },
+    "limits": {
+      "max_identifier_len": 63
     }
   },
   "resource_discovery": {
