@@ -1,0 +1,22 @@
+# This connector's driver only. The engine image ships no database drivers
+# and provides the CDK itself, which is never listed here.
+
+# The DuckDB engine, embedded in-process. It is both the database and the
+# DBAPI: `duckdb_engine` imports it, and the write path's bulk landing
+# registers Arrow batches directly on its connection handle.
+duckdb>=0.10.0
+
+# The `duckdb` SQLAlchemy dialect. Its dialect class declares
+# name="duckdb" / driver="duckdb_engine", which is the `duckdb+duckdb_engine`
+# transport this connector declares; the package publishes only the bare
+# `duckdb` entry point, so connector.py registers the dialect+driver alias
+# onto the same class at import time.
+duckdb_engine>=0.13.0
+
+# Not a duckdb dependency, but a hard requirement for this connector: the
+# duckdb Python client builds tz-aware datetimes through pytz, and raises
+# "Required module 'pytz' failed to import" on ANY read of a TIMESTAMP WITH
+# TIME ZONE column. The read map maps that type to
+# Timestamp(MICROSECOND, UTC), so tz-aware columns are squarely in scope and
+# discovery/reads would fail on them without this.
+pytz>=2024.1

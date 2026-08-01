@@ -24,6 +24,8 @@
   { "match": "exact", "native": "UBIGINT",   "canonical": "UInt64" },
   { "match": "exact", "native": "UHUGEINT",  "canonical": "Decimal128(38, 0)" },
 
+  { "match": "exact", "native": "BIGNUM",    "canonical": "Utf8" },
+
   { "match": "exact", "native": "FLOAT",     "canonical": "Float32" },
   { "match": "exact", "native": "FLOAT4",    "canonical": "Float32" },
   { "match": "exact", "native": "REAL",      "canonical": "Float32" },
@@ -50,10 +52,14 @@
   { "match": "exact", "native": "BITSTRING", "canonical": "Binary" },
 
   { "match": "exact", "native": "DATE",      "canonical": "Date32" },
-  { "match": "regex", "native": "^TIME(\\([0-9]+\\))?$",                     "canonical": "Time64(MICROSECOND)" },
+  { "match": "exact", "native": "TIME WITH TIME ZONE", "canonical": "Time64(MICROSECOND)" },
+  { "match": "regex", "native": "^TIME(\\([0-9]+\\))?$", "canonical": "Time64(MICROSECOND)" },
   { "match": "regex", "native": "^TIMESTAMP(\\([0-9]+\\))? WITH TIME ZONE$", "canonical": "Timestamp(MICROSECOND, UTC)" },
   { "match": "exact", "native": "TIMESTAMPTZ", "canonical": "Timestamp(MICROSECOND, UTC)" },
   { "match": "regex", "native": "^TIMESTAMP(\\([0-9]+\\))?$",                "canonical": "Timestamp(MICROSECOND)" },
+  { "match": "exact", "native": "TIMESTAMP_S",  "canonical": "Timestamp(SECOND)" },
+  { "match": "exact", "native": "TIMESTAMP_MS", "canonical": "Timestamp(MILLISECOND)" },
+  { "match": "exact", "native": "TIMESTAMP_NS", "canonical": "Timestamp(NANOSECOND)" },
   { "match": "exact", "native": "DATETIME",  "canonical": "Timestamp(MICROSECOND)" },
 
   { "match": "exact", "native": "INTERVAL",  "canonical": "Duration(MICROSECOND)" },
@@ -61,10 +67,9 @@
   { "match": "exact", "native": "UUID",      "canonical": "Utf8" },
 
   { "match": "exact", "native": "JSON",      "canonical": "Json" },
-  { "match": "exact", "native": "ARRAY",     "canonical": "Json" },
-  { "match": "exact", "native": "LIST",      "canonical": "Json" },
-  { "match": "exact", "native": "MAP",       "canonical": "Json" },
-  { "match": "exact", "native": "STRUCT",    "canonical": "Json" },
-  { "match": "exact", "native": "UNION",     "canonical": "Json" },
-  { "match": "exact", "native": "ENUM",      "canonical": "Utf8" }
+  { "match": "regex", "native": "^STRUCT\\(.*\\)$", "canonical": "Json" },
+  { "match": "regex", "native": "^MAP\\(.*\\)$",    "canonical": "Json" },
+  { "match": "regex", "native": "^UNION\\(.*\\)$",  "canonical": "Json" },
+  { "match": "regex", "native": "^.+\\[[0-9]*\\]$", "canonical": "Json" },
+  { "match": "regex", "native": "^ENUM\\(.*\\)$",   "canonical": "Utf8" }
 ]

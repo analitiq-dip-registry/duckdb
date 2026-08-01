@@ -1,0 +1,43 @@
+[
+  { "match": "exact", "canonical": "Boolean", "native": "BOOLEAN" },
+
+  { "match": "exact", "canonical": "Int8", "native": "TINYINT" },
+  { "match": "exact", "canonical": "Int16", "native": "SMALLINT" },
+  { "match": "exact", "canonical": "Int32", "native": "INTEGER" },
+  { "match": "exact", "canonical": "Int64", "native": "BIGINT" },
+  { "match": "exact", "canonical": "UInt8", "native": "UTINYINT" },
+  { "match": "exact", "canonical": "UInt16", "native": "USMALLINT" },
+  { "match": "exact", "canonical": "UInt32", "native": "UINTEGER" },
+  { "match": "exact", "canonical": "UInt64", "native": "UBIGINT" },
+
+  { "match": "exact", "canonical": "Float16", "native": "FLOAT" },
+  { "match": "exact", "canonical": "Float32", "native": "FLOAT" },
+  { "match": "exact", "canonical": "Float64", "native": "DOUBLE" },
+
+  { "match": "regex", "canonical": "^Decimal(?:128|256)\\((?<p>[1-9]|[12]\\d|3[0-8]),\\s*(?<s>\\d+)\\)$", "native": "DECIMAL(${p}, ${s})" },
+  { "match": "regex", "canonical": "^Decimal(?:128|256)\\(\\d+,\\s*\\d+\\)$", "native": "VARCHAR" },
+
+  { "match": "exact", "canonical": "Utf8", "native": "VARCHAR" },
+  { "match": "exact", "canonical": "LargeUtf8", "native": "VARCHAR" },
+  { "match": "exact", "canonical": "Null", "native": "VARCHAR" },
+
+  { "match": "exact", "canonical": "Binary", "native": "BLOB" },
+  { "match": "exact", "canonical": "LargeBinary", "native": "BLOB" },
+  { "match": "regex", "canonical": "^FixedSizeBinary\\(\\d+\\)$", "native": "BLOB" },
+
+  { "match": "exact", "canonical": "Json", "native": "JSON" },
+  { "match": "exact", "canonical": "Object", "native": "JSON" },
+  { "match": "exact", "canonical": "List", "native": "JSON" },
+
+  { "match": "exact", "canonical": "Date32", "native": "DATE" },
+  { "match": "exact", "canonical": "Date64", "native": "DATE" },
+
+  { "match": "regex", "canonical": "^Time(?:32|64)\\([A-Z]+\\)$", "native": "TIME" },
+  { "match": "regex", "canonical": "^Duration\\([A-Z]+\\)$", "native": "INTERVAL" },
+
+  { "match": "regex", "canonical": "^Timestamp\\(SECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_S" },
+  { "match": "regex", "canonical": "^Timestamp\\(MILLISECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_MS" },
+  { "match": "regex", "canonical": "^Timestamp\\(MICROSECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP" },
+  { "match": "regex", "canonical": "^Timestamp\\(NANOSECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_NS" },
+  { "match": "regex", "canonical": "^Timestamp\\([A-Z]+,\\s*[^)]+\\)$", "native": "TIMESTAMP WITH TIME ZONE" }
+]
