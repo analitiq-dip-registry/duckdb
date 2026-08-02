@@ -52,18 +52,6 @@
           "placeholder": ":memory: or /absolute/path/to/file.duckdb",
           "widget": "text"
         }
-      },
-      "read_only": {
-        "source": "user",
-        "phase": "pre_auth",
-        "storage": "connection.parameters",
-        "type": "boolean",
-        "required": false,
-        "default": false,
-        "ui": {
-          "label": "Read-only",
-          "widget": "checkbox"
-        }
       }
     },
     "required_for_activation": [
