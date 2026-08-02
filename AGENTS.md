@@ -15,8 +15,7 @@ DuckDB is an embedded, in-process analytical (OLAP) SQL database. This connector
 - Client app required: no
 - DuckDB has no username, password, or TLS handshake. Access to a database is controlled by the operating system's filesystem permissions on the database file.
 - Connection inputs:
-  - `database_path` (required) — local path to the `.duckdb`/`.db` file, or `:memory:` for an ephemeral in-memory database.
-  - `read_only` (declared, default `false`) — **currently non-functional**: it is bound to nothing (see Caveats). Do not treat it as a working option.
+  - `database_path` (required) — local path to the `.duckdb`/`.db` file, or `:memory:` for an ephemeral in-memory database. This is the only connection input.
 - Driver: `duckdb+duckdb_engine` (synchronous SQLAlchemy transport)
 - DSN form: `duckdb+duckdb_engine:///{database_path}` (e.g. `duckdb+duckdb_engine:///:memory:`, `duckdb+duckdb_engine:///relative/file.db`, `duckdb+duckdb_engine:////absolute/path/file.db`). `duckdb_engine` publishes only the bare `duckdb` entry point, so `connector.py` registers the `duckdb.duckdb_engine` alias onto the same dialect class at import time.
 - SSH tunnel support: no (there is no network connection to tunnel).
@@ -52,8 +51,8 @@ Not applicable — DuckDB runs in-process against a local file; there is no netw
 
 ## Caveats
 
-- **`read_only` is declared but not wired.** The DSN template binds only `database_path`, so the input reaches nothing. It would not work as spelled in any case: `duckdb_engine` forwards URL query parameters as DuckDB *config keys*, and `read_only` is not one — `?read_only=true` raises `Catalog Error: unrecognized configuration parameter "read_only"`. The working key is `access_mode=READ_ONLY`. Rewiring it is a separate decision; do not document or rely on it as functional.
-- **Single writer.** A DuckDB file supports one read-write connection at a time; the connector uses `pool_size: 1`. With `read_only` inert there is currently no supported way to attach to a file another process holds open read-write.
+- **No read-only mode.** The connector always opens the database read-write. A `read_only` checkbox was declared until v0.1.0 but was bound to nothing — the DSN template interpolates only `database_path` — and would not have worked as spelled in any case: `duckdb_engine` forwards URL query parameters as DuckDB *config keys*, and `read_only` is not one (`?read_only=true` raises `Catalog Error: unrecognized configuration parameter "read_only"`). The key that does open a database read-only is `access_mode=READ_ONLY`. The inert input was removed rather than rewired: this package registers as a **destination** connector as well as a source, and `READ_ONLY` breaks every write with no declaration-level signal to the engine.
+- **Single writer.** A DuckDB file supports one read-write connection at a time; the connector uses `pool_size: 1`. There is no supported way to attach to a file another process holds open read-write.
 - **In-memory databases are ephemeral.** `:memory:` data is lost when the connection closes and is not shared across connections.
 - **Absolute vs relative paths.** Absolute paths need four slashes after the scheme (`duckdb+duckdb_engine:////abs/path`); relative paths use three (`duckdb+duckdb_engine:///rel/path`). The full path is supplied verbatim in `database_path`.
 - **`config` passthrough not exposed.** DuckDB's `config` dict (e.g. `threads`, `memory_limit`) is not currently a connection input — the connection-contract input types do not represent dictionaries.
