@@ -1,43 +1,166 @@
-[
-  { "match": "exact", "canonical": "Boolean", "native": "BOOLEAN" },
-
-  { "match": "exact", "canonical": "Int8", "native": "TINYINT" },
-  { "match": "exact", "canonical": "Int16", "native": "SMALLINT" },
-  { "match": "exact", "canonical": "Int32", "native": "INTEGER" },
-  { "match": "exact", "canonical": "Int64", "native": "BIGINT" },
-  { "match": "exact", "canonical": "UInt8", "native": "UTINYINT" },
-  { "match": "exact", "canonical": "UInt16", "native": "USMALLINT" },
-  { "match": "exact", "canonical": "UInt32", "native": "UINTEGER" },
-  { "match": "exact", "canonical": "UInt64", "native": "UBIGINT" },
-
-  { "match": "exact", "canonical": "Float16", "native": "FLOAT" },
-  { "match": "exact", "canonical": "Float32", "native": "FLOAT" },
-  { "match": "exact", "canonical": "Float64", "native": "DOUBLE" },
-
-  { "match": "regex", "canonical": "^Decimal(?:128|256)\\((?<p>[1-9]|[12]\\d|3[0-8]),\\s*(?<s>\\d+)\\)$", "native": "DECIMAL(${p}, ${s})" },
-  { "match": "regex", "canonical": "^Decimal(?:128|256)\\(\\d+,\\s*\\d+\\)$", "native": "VARCHAR" },
-
-  { "match": "exact", "canonical": "Utf8", "native": "VARCHAR" },
-  { "match": "exact", "canonical": "LargeUtf8", "native": "VARCHAR" },
-  { "match": "exact", "canonical": "Null", "native": "VARCHAR" },
-
-  { "match": "exact", "canonical": "Binary", "native": "BLOB" },
-  { "match": "exact", "canonical": "LargeBinary", "native": "BLOB" },
-  { "match": "regex", "canonical": "^FixedSizeBinary\\(\\d+\\)$", "native": "BLOB" },
-
-  { "match": "exact", "canonical": "Json", "native": "JSON" },
-  { "match": "exact", "canonical": "Object", "native": "JSON" },
-  { "match": "exact", "canonical": "List", "native": "JSON" },
-
-  { "match": "exact", "canonical": "Date32", "native": "DATE" },
-  { "match": "exact", "canonical": "Date64", "native": "DATE" },
-
-  { "match": "regex", "canonical": "^Time(?:32|64)\\([A-Z]+\\)$", "native": "TIME" },
-  { "match": "regex", "canonical": "^Duration\\([A-Z]+\\)$", "native": "INTERVAL" },
-
-  { "match": "regex", "canonical": "^Timestamp\\(SECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_S" },
-  { "match": "regex", "canonical": "^Timestamp\\(MILLISECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_MS" },
-  { "match": "regex", "canonical": "^Timestamp\\(MICROSECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP" },
-  { "match": "regex", "canonical": "^Timestamp\\(NANOSECOND(?:,\\s*null)?\\)$", "native": "TIMESTAMP_NS" },
-  { "match": "regex", "canonical": "^Timestamp\\([A-Z]+,\\s*[^)]+\\)$", "native": "TIMESTAMP WITH TIME ZONE" }
-]
+{
+  "$schema": "https://schemas.analitiq.ai/type-map-write/latest.json",
+  "direction": "write",
+  "rules": [
+    {
+      "match": "exact",
+      "native_type": "BOOLEAN",
+      "arrow_type": "Boolean"
+    },
+    {
+      "match": "exact",
+      "native_type": "TINYINT",
+      "arrow_type": "Int8"
+    },
+    {
+      "match": "exact",
+      "native_type": "SMALLINT",
+      "arrow_type": "Int16"
+    },
+    {
+      "match": "exact",
+      "native_type": "INTEGER",
+      "arrow_type": "Int32"
+    },
+    {
+      "match": "exact",
+      "native_type": "BIGINT",
+      "arrow_type": "Int64"
+    },
+    {
+      "match": "exact",
+      "native_type": "UTINYINT",
+      "arrow_type": "UInt8"
+    },
+    {
+      "match": "exact",
+      "native_type": "USMALLINT",
+      "arrow_type": "UInt16"
+    },
+    {
+      "match": "exact",
+      "native_type": "UINTEGER",
+      "arrow_type": "UInt32"
+    },
+    {
+      "match": "exact",
+      "native_type": "UBIGINT",
+      "arrow_type": "UInt64"
+    },
+    {
+      "match": "exact",
+      "native_type": "FLOAT",
+      "arrow_type": "Float16"
+    },
+    {
+      "match": "exact",
+      "native_type": "FLOAT",
+      "arrow_type": "Float32"
+    },
+    {
+      "match": "exact",
+      "native_type": "DOUBLE",
+      "arrow_type": "Float64"
+    },
+    {
+      "match": "regex",
+      "native_type": "DECIMAL(${p}, ${s})",
+      "arrow_type": "^Decimal(?:128|256)\\((?<p>[1-9]|[12]\\d|3[0-8]),\\s*(?<s>\\d+)\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "VARCHAR",
+      "arrow_type": "^Decimal(?:128|256)\\(\\d+,\\s*\\d+\\)$"
+    },
+    {
+      "match": "exact",
+      "native_type": "VARCHAR",
+      "arrow_type": "Utf8"
+    },
+    {
+      "match": "exact",
+      "native_type": "VARCHAR",
+      "arrow_type": "LargeUtf8"
+    },
+    {
+      "match": "exact",
+      "native_type": "VARCHAR",
+      "arrow_type": "Null"
+    },
+    {
+      "match": "exact",
+      "native_type": "BLOB",
+      "arrow_type": "Binary"
+    },
+    {
+      "match": "exact",
+      "native_type": "BLOB",
+      "arrow_type": "LargeBinary"
+    },
+    {
+      "match": "regex",
+      "native_type": "BLOB",
+      "arrow_type": "^FixedSizeBinary\\(\\d+\\)$"
+    },
+    {
+      "match": "exact",
+      "native_type": "JSON",
+      "arrow_type": "Json"
+    },
+    {
+      "match": "exact",
+      "native_type": "JSON",
+      "arrow_type": "Object"
+    },
+    {
+      "match": "exact",
+      "native_type": "JSON",
+      "arrow_type": "List"
+    },
+    {
+      "match": "exact",
+      "native_type": "DATE",
+      "arrow_type": "Date32"
+    },
+    {
+      "match": "exact",
+      "native_type": "DATE",
+      "arrow_type": "Date64"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIME",
+      "arrow_type": "^Time(?:32|64)\\([A-Z]+\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "INTERVAL",
+      "arrow_type": "^Duration\\([A-Z]+\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIMESTAMP_S",
+      "arrow_type": "^Timestamp\\(SECOND(?:,\\s*null)?\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIMESTAMP_MS",
+      "arrow_type": "^Timestamp\\(MILLISECOND(?:,\\s*null)?\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIMESTAMP",
+      "arrow_type": "^Timestamp\\(MICROSECOND(?:,\\s*null)?\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIMESTAMP_NS",
+      "arrow_type": "^Timestamp\\(NANOSECOND(?:,\\s*null)?\\)$"
+    },
+    {
+      "match": "regex",
+      "native_type": "TIMESTAMP WITH TIME ZONE",
+      "arrow_type": "^Timestamp\\([A-Z]+,\\s*[^)]+\\)$"
+    }
+  ]
+}
